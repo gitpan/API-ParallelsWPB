@@ -15,7 +15,7 @@ use constant {
 
 # ABSTRACT: processing of API requests
 
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.03'; # VERSION
 our $AUTHORITY = 'cpan:IMAGO'; # AUTHORITY
 
 
@@ -316,7 +316,7 @@ API::ParallelsWPB::Requests - processing of API requests
 
 =head1 VERSION
 
-version 0.01
+version 0.03
 
 =head1 METHODS
 

@@ -1,11 +1,11 @@
 package API::ParallelsWPB::Response;
 use strict;
 use warnings;
-use JSON;
+use JSON::XS qw/decode_json/;
 
 # ABSTRACT: processing of API responses
 
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.03'; # VERSION
 our $AUTHORITY = 'cpan:IMAGO'; # AUTHORITY
 
 
@@ -13,25 +13,31 @@ sub new {
     my ( $class, $res ) = @_;
 
     my $success    = $res->is_success;
-    my $json       = $success ? $res->content : '';
-    my $error_json = $success ? '' : $res->content;
     my $status     = $res->status_line;
 
-    my $parsed_response = $json       ? JSON::decode_json( $json )       : {};
-    my $parsed_error    = $error_json ? eval { JSON::decode_json( $error_json )} : {};
+    my ( $json_content, $response, $error );
+
+    if ( $success ) {
+        $json_content = $res->content;
+        $response = decode_json( $json_content )->{response} if $json_content;
+    }
+    else {
+        my $error_json = $res->content;
+        eval { $error = decode_json( $error_json )->{error}->{message}; 1; }
+        or do { $error = $error_json };
+    }
 
     return bless(
         {
             success  => $success,
-            json     => $json,
-            error    => $parsed_error->{error}->{message},
-            response => $parsed_response->{response},
+            json     => $json_content,
+            error    => $error,
+            response => $response,
             status   => $status
         },
         $class
     );
 }
-
 
 
 sub json {
@@ -83,7 +89,7 @@ API::ParallelsWPB::Response - processing of API responses
 
 =head1 VERSION
 
-version 0.01
+version 0.03
 
 =head1 METHODS
 
@@ -120,8 +126,6 @@ L<Parallels Presence Builder Guide|http://download1.parallels.com/WPB/Doc/11.5/e
 L<API::ParallelsWPB>
 
 L<API::ParallelsWPB::Requests>
-
-=cut
 
 =head1 AUTHORS
 

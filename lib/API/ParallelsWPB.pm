@@ -5,7 +5,7 @@ use warnings;
 
 use LWP::UserAgent;
 use HTTP::Request;
-use JSON;
+use JSON::XS;
 use Carp;
 use API::ParallelsWPB::Response;
 
@@ -13,7 +13,7 @@ use base qw/ API::ParallelsWPB::Requests /;
 
 # ABSTRACT:  client for Parallels Presence Builder API
 
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.03'; # VERSION
 our $AUTHORITY = 'cpan:IMAGO'; # AUTHORITY
 
 
@@ -55,12 +55,13 @@ sub f_request {
     $url .= join( '/', @{ $url_array }) . '/';
 
     my $post_data;
+
     if ( $data->{req_type} eq 'POST' || $data->{req_type} eq 'PUT' ) {
         $data->{post_data} ||= {};
         unless ( ref $data->{post_data} eq 'HASH' || ref $data->{post_data} eq 'ARRAY' ) {
             confess "parameter post_data must be hashref or arrayref!"
         }
-        $post_data = JSON->new->utf8->encode( $data->{post_data} );
+        $post_data = $self->_json->encode($data->{post_data});
     }
     $post_data ||= '{}';
 
@@ -92,6 +93,14 @@ sub _send_request {
     return $response;
 }
 
+sub _json {
+    my ( $self ) = @_;
+
+    unless( $self->{_json} ) {
+        $self->{_json} = JSON::XS->new;
+    }
+    return $self->{_json};
+}
 
 1;
 
@@ -107,7 +116,7 @@ API::ParallelsWPB - client for Parallels Presence Builder API
 
 =head1 VERSION
 
-version 0.01
+version 0.03
 
 =head1 SYNOPSIS
 
@@ -171,8 +180,6 @@ L<Parallels Presence Builder Guide|http://download1.parallels.com/WPB/Doc/11.5/e
 L<API::ParallelsWPB::Response>
 
 L<API::ParallelsWPB::Requests>
-
-=cut
 
 =head1 AUTHORS
 
